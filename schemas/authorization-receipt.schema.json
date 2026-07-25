@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jsonwisdom/-replayos-receiptos-spec/schemas/authorization-receipt.schema.json",
+  "title": "AuthorizationReceipt",
+  "description": "Normative schema for an immutable AuthorizationReceipt (M7). Proves a decision was authorized under correct conditions. Receipt-like, not decision-like.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "receipt_id",
+    "issued_at",
+    "issuer",
+    "subject_decision_id",
+    "authorization_context_hash",
+    "authorization_type",
+    "supporting_evidence_hashes",
+    "signature"
+  ],
+  "properties": {
+    "receipt_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUIDv4 unique identifier for this AuthorizationReceipt"
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC3339 timestamp of issuance"
+    },
+    "issuer": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identity of the authorizing agent (string; constrained enum reserved for later revision)"
+    },
+    "subject_decision_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identifier of the decision being authorized (exactly one)"
+    },
+    "authorization_context_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hex digest over the contextual fields that justify authorization"
+    },
+    "authorization_type": {
+      "type": "string",
+      "enum": ["InitialLock", "ReLock", "Override", "Emergency"],
+      "description": "Type of authorization act"
+    },
+    "supporting_evidence_hashes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "minItems": 0,
+      "uniqueItems": true,
+      "description": "Array of SHA-256 hex digests of supporting evidence"
+    },
+    "signature": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Detached signature (opaque string; cryptographic algorithm not yet normative)"
+    }
+  }
+}

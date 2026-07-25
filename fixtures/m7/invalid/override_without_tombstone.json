@@ -1,0 +1,21 @@
+{
+  "nodes": [
+    {
+      "type": "LockReceipt",
+      "id": "lock-original"
+    },
+    {
+      "type": "LockReceipt",
+      "id": "lock-override"
+    }
+  ],
+  "edges": [
+    {
+      "from": "lock-override",
+      "to": "lock-original",
+      "type": "supersedes"
+    }
+  ],
+  "note": "Missing tombstone node for the superseded lock",
+  "expected_violation": "M7-006"
+}
