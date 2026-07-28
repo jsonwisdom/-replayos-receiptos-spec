@@ -70,28 +70,81 @@ jobs:
           echo "exit_code=${collector_exit_code}" >> "${GITHUB_OUTPUT}"
           exit 0
 
-      - name: Upload untouched execution evidence
+      - name: Capture post-resolution provenance
+        id: provenance
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          supplemental="${RUNNER_TEMP}/pr6_supplemental"
+          mkdir -p "${supplemental}"
+
+          git rev-parse HEAD > "${supplemental}/post_resolution_head.txt" 2>&1
+          git status --porcelain=v1 > "${supplemental}/post_resolution_git_status_porcelain.txt" 2>&1
+          git diff --name-only > "${supplemental}/post_resolution_git_diff_name_only.txt" 2>&1
+          git diff --cached --name-only > "${supplemental}/post_resolution_git_diff_cached_name_only.txt" 2>&1
+          git diff --stat > "${supplemental}/post_resolution_git_diff_stat.txt" 2>&1
+
+          lockfile="constitutional_vm_audit/Cargo.lock"
+          if [[ -f "${lockfile}" ]]; then
+            cp --preserve=mode,timestamps "${lockfile}" "${supplemental}/Cargo.lock"
+            sha256sum "${supplemental}/Cargo.lock" > "${supplemental}/Cargo.lock.sha256"
+            provenance_exit_code=0
+          else
+            printf 'MISSING: %s\n' "${lockfile}" > "${supplemental}/Cargo.lock.missing.txt"
+            provenance_exit_code=3
+          fi
+
+          (
+            cd "${supplemental}"
+            find . -maxdepth 1 -type f \
+              ! -name 'supplemental_bundle.sha256' \
+              ! -name 'supplemental_bundle_manifest_hash.txt' \
+              -print0 \
+              | LC_ALL=C sort -z \
+              | xargs -0 sha256sum
+          ) > "${supplemental}/supplemental_bundle.sha256"
+
+          sha256sum "${supplemental}/supplemental_bundle.sha256" \
+            | awk '{print $1}' \
+            > "${supplemental}/supplemental_bundle_manifest_hash.txt"
+
+          echo "exit_code=${provenance_exit_code}" >> "${GITHUB_OUTPUT}"
+          exit 0
+
+      - name: Upload execution and provenance evidence
         if: always()
         # actions/upload-artifact v4.6.2
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: constitutional-vm-receipt-${{ github.event.pull_request.head.sha || github.sha }}
-          path: ${{ runner.temp }}/pr6_evidence
+          path: |
+            ${{ runner.temp }}/pr6_evidence
+            ${{ runner.temp }}/pr6_supplemental
           if-no-files-found: warn
           include-hidden-files: true
 
-      - name: Enforce collector exit code
+      - name: Enforce evidence exit codes
         if: always()
         shell: bash
         env:
           COLLECTOR_EXIT_CODE: ${{ steps.collector.outputs.exit_code }}
+          PROVENANCE_EXIT_CODE: ${{ steps.provenance.outputs.exit_code }}
         run: |
           set -euo pipefail
           if [[ -z "${COLLECTOR_EXIT_CODE}" ]]; then
             echo "Collector did not report an exit code." >&2
             exit 1
           fi
+          if [[ -z "${PROVENANCE_EXIT_CODE}" ]]; then
+            echo "Provenance capture did not report an exit code." >&2
+            exit 1
+          fi
           if [[ "${COLLECTOR_EXIT_CODE}" -ne 0 ]]; then
             echo "Collector exited with code ${COLLECTOR_EXIT_CODE}." >&2
             exit "${COLLECTOR_EXIT_CODE}"
+          fi
+          if [[ "${PROVENANCE_EXIT_CODE}" -ne 0 ]]; then
+            echo "Provenance capture exited with code ${PROVENANCE_EXIT_CODE}." >&2
+            exit "${PROVENANCE_EXIT_CODE}"
           fi
