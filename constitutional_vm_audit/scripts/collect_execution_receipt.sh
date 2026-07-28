@@ -6,12 +6,19 @@ set -uo pipefail
 
 ROOT_DIR="$(git rev-parse --show-toplevel)"
 CRATE_DIR="${ROOT_DIR}/constitutional_vm_audit"
-RECEIPT_ROOT="${CRATE_DIR}/receipts"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)"
+RECEIPT_ROOT="${RECEIPT_ROOT:-${TMPDIR:-/tmp}/constitutional_vm_audit_receipts}"
 OUT_DIR="${RECEIPT_ROOT}/${RUN_ID}"
-mkdir -p "${OUT_DIR}"
 
-exec > >(tee "${OUT_DIR}/collector.stdout.log") 2> >(tee "${OUT_DIR}/collector.stderr.log" >&2)
+# Capture repository state before creating any evidence artifacts.
+cd "${ROOT_DIR}"
+COMMIT_SHA="$(git rev-parse HEAD)"
+BRANCH="$(git branch --show-current)"
+WORKTREE_STATUS="$(git status --porcelain=v1)"
+GIT_DIFF_STAT="$(git diff --stat)"
+GIT_DIFF_CACHED_STAT="$(git diff --cached --stat)"
+
+mkdir -p "${OUT_DIR}"
 
 record() {
   local name="$1"
@@ -25,17 +32,11 @@ record() {
   return 0
 }
 
-cd "${ROOT_DIR}"
-
-COMMIT_SHA="$(git rev-parse HEAD)"
-BRANCH="$(git branch --show-current)"
-WORKTREE_STATUS="$(git status --porcelain=v1)"
-
 printf '%s\n' "${COMMIT_SHA}" >"${OUT_DIR}/commit_sha.txt"
 printf '%s\n' "${BRANCH}" >"${OUT_DIR}/branch.txt"
 printf '%s' "${WORKTREE_STATUS}" >"${OUT_DIR}/git_status_porcelain.txt"
-git diff --stat >"${OUT_DIR}/git_diff_stat.txt"
-git diff --cached --stat >"${OUT_DIR}/git_diff_cached_stat.txt"
+printf '%s' "${GIT_DIFF_STAT}" >"${OUT_DIR}/git_diff_stat.txt"
+printf '%s' "${GIT_DIFF_CACHED_STAT}" >"${OUT_DIR}/git_diff_cached_stat.txt"
 
 record rustc_version rustc --version
 record cargo_version cargo --version
@@ -76,10 +77,13 @@ cat >"${OUT_DIR}/receipt_manifest.json" <<EOF
 }
 EOF
 
-# Deterministic bundle excludes the hash file itself and archive metadata.
+# Deterministic per-file commitments. The hash manifest does not hash itself.
 (
   cd "${OUT_DIR}"
-  find . -maxdepth 1 -type f ! -name 'receipt_bundle.sha256' -print0 \
+  find . -maxdepth 1 -type f \
+    ! -name 'receipt_bundle.sha256' \
+    ! -name 'receipt_bundle_manifest_hash.txt' \
+    -print0 \
     | LC_ALL=C sort -z \
     | xargs -0 sha256sum
 ) >"${OUT_DIR}/receipt_bundle.sha256"
@@ -93,7 +97,7 @@ printf 'Test exit code: %s\n' "${TEST_EXIT_CODE}"
 printf 'Bundle manifest hash: %s\n' "${BUNDLE_HASH}"
 
 if [[ -n "${WORKTREE_STATUS}" ]]; then
-  printf 'FAIL-CLOSED: worktree was not clean.\n' >&2
+  printf 'FAIL-CLOSED: worktree was not clean before receipt collection.\n' >&2
   exit 2
 fi
 
