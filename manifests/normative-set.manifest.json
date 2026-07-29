@@ -2,6 +2,7 @@
   "manifestId": "ns-v1.0.0-rc1",
   "version": "1.0.0-rc1",
   "description": "Complete and frozen normative set for v1.0.0-rc1. Four-stage receipt pipeline ROR → ER → GER → PR. Decision = F(Specification, ROR, ER, ObservationBoundary). All schemas and Decision Function drafted. Subject to G-001 promotion gate.",
+  "registryVersion": "1.0",
   "objects": [
     {
       "path": "schemas/observation-boundary.schema.json",
@@ -62,10 +63,79 @@
       "kind": "function-spec",
       "version": "1.0.0",
       "role": "DecisionFunction"
+    },
+    {
+      "path": "spec/public-record-artifact-v0.1.md",
+      "kind": "artifact-spec",
+      "version": "0.1",
+      "role": "ReceiptOSPublicRecordArtifact",
+      "status": "FROZEN"
+    },
+    {
+      "path": "spec/policy-artifact-v0.1.md",
+      "kind": "artifact-spec",
+      "version": "0.1",
+      "role": "ReceiptOSPolicyArtifact",
+      "status": "FROZEN"
+    },
+    {
+      "path": "spec/initiating-record-artifact-v0.1.md",
+      "kind": "artifact-spec",
+      "version": "0.1",
+      "role": "ReceiptOSInitiatingRecordArtifact",
+      "status": "FROZEN"
+    },
+    {
+      "path": "spec/evidence-record-artifact-v0.1.md",
+      "kind": "artifact-spec",
+      "version": "0.1",
+      "role": "ReceiptOSEvidenceRecordArtifact",
+      "status": "FROZEN"
+    },
+    {
+      "path": "spec/procurement-artifact-v0.1.1.md",
+      "kind": "artifact-spec-extension",
+      "version": "0.1.1",
+      "role": "ReceiptOSProcurementArtifactRelationshipExtension",
+      "status": "FROZEN",
+      "registryCompatibility": "compatible"
+    },
+    {
+      "path": "spec/contract-artifact-v0.1.1.md",
+      "kind": "artifact-spec-extension",
+      "version": "0.1.1",
+      "role": "ReceiptOSContractArtifactRelationshipExtension",
+      "status": "FROZEN",
+      "registryCompatibility": "compatible"
+    },
+    {
+      "path": "spec/appeals-artifact-v0.1.1.md",
+      "kind": "artifact-spec-extension",
+      "version": "0.1.1",
+      "role": "ReceiptOSAppealsArtifactRelationshipExtension",
+      "status": "FROZEN",
+      "registryCompatibility": "compatible"
+    },
+    {
+      "path": "spec/audit-finding-artifact-v0.1.1.md",
+      "kind": "artifact-spec-extension",
+      "version": "0.1.1",
+      "role": "ReceiptOSAuditFindingArtifactRelationshipExtension",
+      "status": "FROZEN",
+      "registryCompatibility": "compatible"
+    },
+    {
+      "path": "spec/underlying-decision-artifact-v0.1.1.md",
+      "kind": "artifact-spec-extension",
+      "version": "0.1.1",
+      "role": "ReceiptOSUnderlyingDecisionArtifactRelationshipExtension",
+      "status": "FROZEN",
+      "registryCompatibility": "compatible"
     }
   ],
   "schemaCount": 9,
-  "totalCanonicalObjects": 10,
+  "artifactSpecCount": 9,
+  "totalCanonicalObjects": 19,
   "receiptPipeline": ["ROR", "ER", "GER", "PR"],
   "decisionFormula": "Decision = F(Specification, ROR, ER, ObservationBoundary)",
   "promotionGate": "G-001",
