@@ -62,10 +62,39 @@
       "kind": "function-spec",
       "version": "1.0.0",
       "role": "DecisionFunction"
+    },
+    {
+      "path": "spec/public-record-artifact-v0.1.md",
+      "kind": "artifact-spec",
+      "version": "0.1",
+      "role": "ReceiptOSPublicRecordArtifact",
+      "status": "FROZEN"
+    },
+    {
+      "path": "spec/policy-artifact-v0.1.md",
+      "kind": "artifact-spec",
+      "version": "0.1",
+      "role": "ReceiptOSPolicyArtifact",
+      "status": "FROZEN"
+    },
+    {
+      "path": "spec/initiating-record-artifact-v0.1.md",
+      "kind": "artifact-spec",
+      "version": "0.1",
+      "role": "ReceiptOSInitiatingRecordArtifact",
+      "status": "FROZEN"
+    },
+    {
+      "path": "spec/evidence-record-artifact-v0.1.md",
+      "kind": "artifact-spec",
+      "version": "0.1",
+      "role": "ReceiptOSEvidenceRecordArtifact",
+      "status": "FROZEN"
     }
   ],
   "schemaCount": 9,
-  "totalCanonicalObjects": 10,
+  "artifactSpecCount": 4,
+  "totalCanonicalObjects": 14,
   "receiptPipeline": ["ROR", "ER", "GER", "PR"],
   "decisionFormula": "Decision = F(Specification, ROR, ER, ObservationBoundary)",
   "promotionGate": "G-001",
