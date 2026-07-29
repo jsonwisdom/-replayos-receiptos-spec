@@ -1,0 +1,11 @@
+{
+  "algorithm": "sha256",
+  "scope": "materialized-frozen-v0.1-artifacts",
+  "generatedFrom": "main after merged PRs #7 and #8",
+  "files": {
+    "spec/public-record-artifact-v0.1.md": "56e95fa3f8cf4d3310aba7713f69f6de9c53e8a2a1a0306825547ff42d4f076b",
+    "spec/policy-artifact-v0.1.md": "bd3d4f25a1e7a225049bbbee850517318dc3e43ee7d0329e874b5a11a26c706d",
+    "spec/initiating-record-artifact-v0.1.md": "99551e79172a15c00fffc87fb60cdcdb3f927914bdd86f8c3a9baa3c59905497",
+    "spec/evidence-record-artifact-v0.1.md": "4c3512a0df3a99ad66b3e9fe7d37d678a0354d2bfbcbb7095354f629310dc544"
+  }
+}
