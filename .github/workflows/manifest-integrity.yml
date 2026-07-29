@@ -1,0 +1,163 @@
+name: Manifest Integrity Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  manifest-integrity:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate manifest, frozen hashes, and additive extensions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import hashlib
+          import json
+          import pathlib
+          import sys
+
+          root = pathlib.Path('.')
+          manifest_path = root / 'manifests/normative-set.manifest.json'
+          lock_path = root / 'manifests/frozen-v0.1.sha256.json'
+
+          errors = []
+
+          def fail(message: str) -> None:
+              errors.append(message)
+
+          try:
+              manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          except Exception as exc:
+              print(f'ERROR: unable to parse {manifest_path}: {exc}')
+              sys.exit(1)
+
+          try:
+              lock = json.loads(lock_path.read_text(encoding='utf-8'))
+          except Exception as exc:
+              print(f'ERROR: unable to parse {lock_path}: {exc}')
+              sys.exit(1)
+
+          objects = manifest.get('objects')
+          if not isinstance(objects, list):
+              fail('manifest.objects must be an array')
+              objects = []
+
+          declared_total = manifest.get('totalCanonicalObjects')
+          if declared_total != 19:
+              fail(f'totalCanonicalObjects must equal 19; got {declared_total!r}')
+          if declared_total != len(objects):
+              fail(f'totalCanonicalObjects={declared_total!r} but objects has {len(objects)} entries')
+
+          artifact_objects = [
+              obj for obj in objects
+              if obj.get('kind') in {'artifact-spec', 'artifact-spec-extension'}
+          ]
+          declared_artifacts = manifest.get('artifactSpecCount')
+          if declared_artifacts != 9:
+              fail(f'artifactSpecCount must equal 9; got {declared_artifacts!r}')
+          if declared_artifacts != len(artifact_objects):
+              fail(f'artifactSpecCount={declared_artifacts!r} but manifest contains {len(artifact_objects)} artifact objects')
+
+          schema_objects = [obj for obj in objects if obj.get('kind') == 'schema']
+          if manifest.get('schemaCount') != len(schema_objects):
+              fail(f"schemaCount={manifest.get('schemaCount')!r} but manifest contains {len(schema_objects)} schemas")
+
+          if manifest.get('registryVersion') != '1.0':
+              fail(f"registryVersion must equal '1.0'; got {manifest.get('registryVersion')!r}")
+          if manifest.get('promotionGate') != 'G-001':
+              fail(f"promotionGate must remain 'G-001'; got {manifest.get('promotionGate')!r}")
+
+          allowed_kinds = {'schema', 'function-spec', 'artifact-spec', 'artifact-spec-extension'}
+          seen_paths = set()
+          for index, obj in enumerate(objects):
+              path = obj.get('path')
+              kind = obj.get('kind')
+              if not isinstance(path, str) or not path:
+                  fail(f'objects[{index}].path must be a non-empty string')
+                  continue
+              if path in seen_paths:
+                  fail(f'duplicate manifest path: {path}')
+              seen_paths.add(path)
+              if kind not in allowed_kinds:
+                  fail(f'unsupported kind {kind!r} for {path}')
+              if not (root / path).is_file():
+                  fail(f'manifest path does not exist: {path}')
+
+          if lock.get('algorithm') != 'sha256':
+              fail(f"hash-lock algorithm must be 'sha256'; got {lock.get('algorithm')!r}")
+
+          locked_files = lock.get('files')
+          if not isinstance(locked_files, dict) or not locked_files:
+              fail('hash-lock files map must be a non-empty object')
+              locked_files = {}
+
+          frozen_manifest_paths = {
+              obj.get('path') for obj in objects
+              if obj.get('kind') == 'artifact-spec'
+              and obj.get('version') == '0.1'
+              and obj.get('status') == 'FROZEN'
+          }
+          if set(locked_files) != frozen_manifest_paths:
+              fail(
+                  'hash-lock paths must exactly match materialized frozen v0.1 artifact paths; '
+                  f'locked={sorted(locked_files)}, manifest={sorted(frozen_manifest_paths)}'
+              )
+
+          for path, expected in locked_files.items():
+              file_path = root / path
+              if not file_path.is_file():
+                  fail(f'locked file missing: {path}')
+                  continue
+              actual = hashlib.sha256(file_path.read_bytes()).hexdigest()
+              if actual != expected:
+                  fail(f'immutability violation: {path}: expected {expected}, got {actual}')
+
+          extension_objects = [obj for obj in objects if obj.get('kind') == 'artifact-spec-extension']
+          required_markers = (
+              'FROZEN ADDITIVE EXTENSION',
+              'Base specification:',
+              'registry_version: 1.0',
+              'registry_compatibility: compatible',
+              'additive only',
+              'does not delete, replace, reinterpret, or mutate',
+          )
+          for obj in extension_objects:
+              path = obj.get('path', '')
+              if obj.get('version') != '0.1.1':
+                  fail(f'extension {path} must declare version 0.1.1')
+              if obj.get('status') != 'FROZEN':
+                  fail(f'extension {path} must declare status FROZEN')
+              if obj.get('registryCompatibility') != 'compatible':
+                  fail(f'extension {path} must declare registryCompatibility compatible')
+              if not path.endswith('-artifact-v0.1.1.md'):
+                  fail(f'extension path must end with -artifact-v0.1.1.md: {path}')
+                  continue
+              text = (root / path).read_text(encoding='utf-8')
+              lowered = text.lower()
+              for marker in required_markers:
+                  if marker.lower() not in lowered:
+                      fail(f'extension {path} is missing required marker: {marker}')
+              if '_refs:' not in text or '_link_status:' not in text:
+                  fail(f'extension {path} must define reference arrays and independent link statuses')
+
+          if errors:
+              for error in errors:
+                  print(f'ERROR: {error}')
+              sys.exit(1)
+
+          print('Manifest integrity validated.')
+          print(f'Canonical objects: {len(objects)}')
+          print(f'Artifact specifications: {len(artifact_objects)}')
+          print(f'Frozen v0.1 hash locks: {len(locked_files)}')
+          print(f'Additive v0.1.1 extensions: {len(extension_objects)}')
+          PY
