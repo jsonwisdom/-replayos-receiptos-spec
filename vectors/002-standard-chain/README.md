@@ -13,14 +13,29 @@ This synthetic vector proves the first non-genesis RAA chain extension.
 
 ## Verification
 
-1. Recompute Vector 001 signed bytes and confirm its content hash equals `prior-receipt-content-hash.txt`.
-2. Confirm `receipt.json.prior_receipt` contains the Vector 001 ID and content hash.
-3. Confirm `sequence == 1`.
-4. Confirm `runtime.signing_key.validity_receipt_ref` references Vector 001 by both ID and content hash.
-5. Remove Vector 002's top-level `signature` member.
-6. RFC 8785-canonicalize the remaining object to UTF-8 bytes.
-7. Construct `UTF8("RAA_RECEIPT_V1") || 0x00 || payload_bytes`.
-8. SHA-256 the signed bytes and compare with `content-hash.txt`.
-9. Verify the Ed25519 signature using Vector 001's published conformance public key.
+1. Retrieve Vector 001 from the canonical `main` branch.
+2. Remove Vector 001's top-level `signature` member.
+3. RFC 8785-canonicalize the remaining Vector 001 object to UTF-8 bytes.
+4. Construct `UTF8("RAA_RECEIPT_V1") || 0x00 || vector_001_payload_bytes`.
+5. SHA-256 those signed bytes and confirm the result equals `prior-receipt-content-hash.txt`.
+6. Confirm `receipt.json.prior_receipt` contains the Vector 001 ID and content hash.
+7. Confirm `sequence == 1`.
+8. Confirm `runtime.signing_key.validity_receipt_ref` references Vector 001 by both ID and content hash.
+9. Remove Vector 002's top-level `signature` member.
+10. RFC 8785-canonicalize the remaining Vector 002 object to UTF-8 bytes.
+11. Construct `UTF8("RAA_RECEIPT_V1") || 0x00 || vector_002_payload_bytes`.
+12. SHA-256 the signed bytes and compare with `content-hash.txt`.
+13. Verify the Ed25519 signature using Vector 001's published conformance public key.
 
-This vector proves record ordering and cryptographic linkage only. It does not establish trusted time, source correctness, disclosure completeness, or operational authority.
+## Key Reuse Notice
+
+This vector reuses the same conformance key derivation as Vector 001. This is intentional for deterministic test reproducibility.
+
+In production RAA deployments:
+
+- Instrument instances should use scope-appropriate signing keys rather than copying the conformance fixture.
+- Key rotation must produce a new `KEY_ROTATION` receipt before later receipts use the rotated key.
+- Reuse of this published test derivation outside conformance testing is prohibited.
+- Test-fixture key reuse does not establish that production key reuse is safe or authorized.
+
+This vector proves record ordering, key-history binding, and cryptographic linkage only. It does not establish trusted time, source correctness, disclosure completeness, authority legitimacy, or real-world truth.
