@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raa.example/schema/raa-metadata-base-v1.schema.json",
+  "title": "RAA Base Instrument Metadata v1",
+  "type": "object",
+  "minProperties": 1,
+  "properties": {
+    "control_action": {"type": "string", "enum": ["KEY_GENESIS", "KEY_ROTATION", "REGISTER", "CONFIGURE", "AUTHORIZE", "ACTIVATE", "SUSPEND", "UPGRADE", "AUDIT", "DEACTIVATE"]},
+    "public_key_bytes": {"type": "string", "pattern": "^base64:[A-Za-z0-9+/]+={0,2}$"},
+    "public_key_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "key_id": {"type": "string", "minLength": 1},
+    "runtime_instance_id": {"type": "string", "pattern": "^urn:uuid:[0-9a-f-]{36}$"},
+    "runtime_binary_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "runtime_configuration_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "verification_context_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "synthetic_test_vector": {"type": "boolean"}
+  },
+  "required": [],
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "if": {"properties": {"control_action": {"const": "KEY_GENESIS"}}, "required": ["control_action"]},
+      "then": {"required": ["public_key_bytes", "public_key_hash", "key_id", "runtime_instance_id", "runtime_binary_hash", "runtime_configuration_hash", "verification_context_hash"]}
+    }
+  ]
+}
