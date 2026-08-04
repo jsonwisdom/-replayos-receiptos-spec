@@ -1,0 +1,13 @@
+{
+  "expected_error": "CONTENT_HASH_MISMATCH",
+  "violated_invariant": "Signed payload bytes must match the published content hash and signature.",
+  "receipt": {
+    "id": "01928374-0001-7000-8000-000000000002",
+    "prior_receipt": {"id": "01928374-0000-7000-8000-000000000000", "content_hash": "sha256:7ec1f57d9053774d7c595da90ab29102a3c8e5f8cd662465844a8d94ef0042f9"},
+    "sequence": 1,
+    "runtime": {"implementation": "ReplayOS", "version": "1.0.0", "instance_id": "urn:uuid:01928374-0000-7000-8000-000000000001", "binary_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "configuration_hash": "sha256:a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a", "signing_key": {"key_id": "did:key:z6MkhdxRrX8GXyW2x9ArDxay7ioxmWr95Pfzr4Dmm7GJHuF1", "public_key_hash": "sha256:1b64c04b88e38a56e442473bc3c8c1206b744ce0f070d9a2be275af73beea467", "key_version": 1, "validity_receipt_ref": {"id": "01928374-0000-7000-8000-000000000000", "content_hash": "sha256:7ec1f57d9053774d7c595da90ab29102a3c8e5f8cd662465844a8d94ef0042f9"}}},
+    "observed_at": "2026-08-04T00:00:01Z", "time_evidence": {"type": "LOCAL_CLOCK", "reference": null}, "instrument_id": "001", "type": "evidence", "input_hash": "sha256:5df6e0e2761358c4a335de7d1b2685c6a1cb9b3f6d8a5905b0f347e65c3f30c8", "output_hash": "sha256:6f5902ac237024bdd0c176cb93063dc4c8b6c3a2a9bd8676f2a516cdda50d37a", "status": "OK", "evidence_class": "UNVERIFIED", "anchor": {"scheme": "sha256", "digest": "sha256:1f8c05ff334536c59e476348f0d4de4eaad6f4db6a61aa8f706f8b8ae1d1c6d0", "location": null, "inclusion_proof": {"type": "none", "data": null}}, "verification_context": {"profile": "RAA-URP-1", "context_hash": "sha256:20d85fb6608c99db24c778f8eeeac7d42b7bf6604eb6e97bddb17f1fe897036c"}, "terminal": false,
+    "metadata": {"synthetic_test_vector": true, "vector_id": "002-standard-chain", "event": "STANDARD_CHAIN_EXTENSION", "prior_vector": "001-key-genesis", "declared_result": "MUTATED_AFTER_SIGNATURE"},
+    "signature": "ed25519:base64:njMxDFWwUMlYnTy2epHfh29bAFi7wFKRxav5S9tv1cw89FDlyAX7c5Jw2PnK8XBqFMJI50xoC449iHwi3QkrCQ=="
+  }
+}
