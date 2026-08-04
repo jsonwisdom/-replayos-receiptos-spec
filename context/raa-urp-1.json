@@ -1,0 +1,30 @@
+{
+  "profile": "RAA-URP-1",
+  "schema_version": "1.0.0-candidate",
+  "canonicalization": {
+    "name": "RFC8785-JCS",
+    "output": "UTF-8 bytes"
+  },
+  "hash": {
+    "name": "SHA-256",
+    "encoding": "lowercase hexadecimal",
+    "prefix": "sha256:"
+  },
+  "signature": {
+    "name": "Ed25519",
+    "encoding": "base64",
+    "prefix": "ed25519:base64:"
+  },
+  "key_binding": {
+    "public_key_encoding": "raw Ed25519 32-byte key",
+    "public_key_hash_input": "raw public key bytes"
+  },
+  "domain_separator": {
+    "text": "RAA_RECEIPT_V1",
+    "encoding": "UTF-8",
+    "separator_hex": "00"
+  },
+  "signed_object": "receipt object with top-level signature member omitted",
+  "content_hash_input": "domain_bytes || 0x00 || JCS_UTF8(receipt_without_signature)",
+  "truth_boundary": "Receipt validity does not establish claim truth, authority legitimacy, source correctness, or disclosure completeness."
+}

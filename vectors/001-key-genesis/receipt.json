@@ -1,0 +1,58 @@
+{
+  "id": "01928374-0000-7000-8000-000000000000",
+  "prior_receipt": {
+    "id": null,
+    "content_hash": null
+  },
+  "sequence": 0,
+  "runtime": {
+    "implementation": "ReplayOS",
+    "version": "1.0.0",
+    "instance_id": "urn:uuid:01928374-0000-7000-8000-000000000001",
+    "binary_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "configuration_hash": "sha256:a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a",
+    "signing_key": {
+      "key_id": "did:key:z6MkhdxRrX8GXyW2x9ArDxay7ioxmWr95Pfzr4Dmm7GJHuF1",
+      "public_key_hash": "sha256:1b64c04b88e38a56e442473bc3c8c1206b744ce0f070d9a2be275af73beea467",
+      "key_version": 1,
+      "validity_receipt_ref": null
+    }
+  },
+  "observed_at": "2026-08-04T00:00:00Z",
+  "time_evidence": {
+    "type": "LOCAL_CLOCK",
+    "reference": null
+  },
+  "instrument_id": "000",
+  "type": "control",
+  "input_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "output_hash": "sha256:a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a",
+  "status": "OK",
+  "evidence_class": "UNVERIFIED",
+  "anchor": {
+    "scheme": "sha256",
+    "digest": "sha256:d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
+    "location": null,
+    "inclusion_proof": {
+      "type": "none",
+      "data": null
+    }
+  },
+  "verification_context": {
+    "profile": "RAA-URP-1",
+    "context_hash": "sha256:20d85fb6608c99db24c778f8eeeac7d42b7bf6604eb6e97bddb17f1fe897036c"
+  },
+  "terminal": false,
+  "metadata": {
+    "control_action": "KEY_GENESIS",
+    "public_key_bytes": "base64:L1CH8e7tkvuH2wenTuUA+yqIKX9evQRTXZV+tZ5o7uw=",
+    "public_key_hash": "sha256:1b64c04b88e38a56e442473bc3c8c1206b744ce0f070d9a2be275af73beea467",
+    "key_id": "did:key:z6MkhdxRrX8GXyW2x9ArDxay7ioxmWr95Pfzr4Dmm7GJHuF1",
+    "runtime_instance_id": "urn:uuid:01928374-0000-7000-8000-000000000001",
+    "runtime_binary_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runtime_configuration_hash": "sha256:a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a",
+    "verification_context_hash": "sha256:20d85fb6608c99db24c778f8eeeac7d42b7bf6604eb6e97bddb17f1fe897036c",
+    "synthetic_test_vector": true
+  },
+  "signature": "ed25519:base64:lmvtU3kpLKtocs+Sttr239za455qSp43pebVzIS9QQMypzu/qqemOQGmbsTh8tgt+u3nIhv2mzVVRALPMv6XBw=="
+}

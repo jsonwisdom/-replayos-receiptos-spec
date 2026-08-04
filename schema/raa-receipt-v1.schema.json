@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raa.example/schema/raa-receipt-v1.schema.json",
+  "title": "RAA Universal Receipt Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "prior_receipt",
+    "sequence",
+    "runtime",
+    "observed_at",
+    "time_evidence",
+    "instrument_id",
+    "type",
+    "input_hash",
+    "output_hash",
+    "status",
+    "evidence_class",
+    "anchor",
+    "verification_context",
+    "terminal",
+    "metadata",
+    "signature"
+  ],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "prior_receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "content_hash"],
+      "properties": {
+        "id": {"type": ["string", "null"], "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+        "content_hash": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    },
+    "sequence": {"type": "integer", "minimum": 0},
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["implementation", "version", "instance_id", "binary_hash", "configuration_hash", "signing_key"],
+      "properties": {
+        "implementation": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "instance_id": {"type": "string", "pattern": "^urn:uuid:[0-9a-f-]{36}$"},
+        "binary_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "configuration_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "signing_key": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["key_id", "public_key_hash", "key_version", "validity_receipt_ref"],
+          "properties": {
+            "key_id": {"type": "string", "minLength": 1},
+            "public_key_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+            "key_version": {"type": "integer", "minimum": 1},
+            "validity_receipt_ref": {
+              "oneOf": [
+                {"type": "null"},
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["id", "content_hash"],
+                  "properties": {
+                    "id": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+                    "content_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "observed_at": {"type": "string", "format": "date-time"},
+    "time_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "reference"],
+      "properties": {
+        "type": {"enum": ["LOCAL_CLOCK", "RFC3161", "BLOCK_TIMESTAMP", "TRANSPARENCY_LOG"]},
+        "reference": {"type": ["string", "null"]}
+      },
+      "allOf": [
+        {"if": {"properties": {"type": {"const": "LOCAL_CLOCK"}}}, "then": {"properties": {"reference": {"type": "null"}}}},
+        {"if": {"properties": {"type": {"enum": ["RFC3161", "BLOCK_TIMESTAMP", "TRANSPARENCY_LOG"]}}}, "then": {"properties": {"reference": {"type": "string", "minLength": 1}}}}
+      ]
+    },
+    "instrument_id": {"type": "string", "pattern": "^[0-9]{3}$"},
+    "type": {"enum": ["evidence", "replay", "mirror", "control", "economic", "archive"]},
+    "input_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "output_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "status": {"enum": ["OK", "MISSING", "CONFLICTING", "UNAUTHORIZED", "FAILED"]},
+    "evidence_class": {"enum": ["PRIMARY", "SECONDARY", "DERIVED", "UNVERIFIED", "MISSING", "CONFLICTING"]},
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scheme", "digest", "location", "inclusion_proof"],
+      "properties": {
+        "scheme": {"enum": ["sha256", "ipfs", "transparency_log", "blockchain"]},
+        "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "location": {"type": ["string", "null"]},
+        "inclusion_proof": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "data"],
+          "properties": {
+            "type": {"enum": ["merkle", "sparse", "none"]},
+            "data": {"type": ["string", "null"]}
+          }
+        }
+      }
+    },
+    "verification_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "context_hash"],
+      "properties": {
+        "profile": {"const": "RAA-URP-1"},
+        "context_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    },
+    "terminal": {"type": "boolean"},
+    "metadata": {"$ref": "raa-metadata-base-v1.schema.json"},
+    "signature": {"type": "string", "pattern": "^ed25519:base64:[A-Za-z0-9+/]+={0,2}$"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"type": {"const": "control"}, "metadata": {"properties": {"control_action": {"const": "KEY_GENESIS"}}, "required": ["control_action"]}}},
+      "then": {
+        "properties": {
+          "sequence": {"const": 0},
+          "prior_receipt": {"properties": {"id": {"type": "null"}, "content_hash": {"type": "null"}}},
+          "runtime": {"properties": {"signing_key": {"properties": {"validity_receipt_ref": {"type": "null"}}}}}
+        }
+      }
+    },
+    {
+      "if": {"not": {"properties": {"type": {"const": "control"}, "metadata": {"properties": {"control_action": {"const": "KEY_GENESIS"}}, "required": ["control_action"]}}}},
+      "then": {"properties": {"runtime": {"properties": {"signing_key": {"properties": {"validity_receipt_ref": {"type": "object"}}}}}}}
+    }
+  ]
+}

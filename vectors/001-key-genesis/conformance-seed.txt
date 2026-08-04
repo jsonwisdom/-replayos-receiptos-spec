@@ -1,0 +1,21 @@
+# CONFORMANCE KEY MATERIAL — NON-PRODUCTION TEST FIXTURE
+# Purpose: Deterministic regeneration of Vector 001
+# WARNING: NEVER use this derivation in any non-test environment
+
+DERIVATION_INPUT  = RAA_VECTOR_001_KEY_GENESIS_CONFORMANCE_SEED_V1
+DERIVATION        = SHA256(UTF8(DERIVATION_INPUT))
+KEY_CONSTRUCTION  = Ed25519.keypair_from_seed(DERIVATION)
+EXPECTED_PUBLIC   = did:key:z6MkhdxRrX8GXyW2x9ArDxay7ioxmWr95Pfzr4Dmm7GJHuF1
+EXPECTED_GENESIS  = sha256:7ec1f57d9053774d7c595da90ab29102a3c8e5f8cd662465844a8d94ef0042f9
+
+REGENERATION_STEPS:
+  1. UTF-8 encode DERIVATION_INPUT exactly
+  2. SHA-256 hash those bytes to obtain the 32-byte test seed
+  3. Derive the Ed25519 keypair
+  4. Confirm the public key matches EXPECTED_PUBLIC
+  5. Construct and sign the receipt per Erratum B
+  6. Confirm the signature matches receipt.json
+  7. Confirm content_hash matches EXPECTED_GENESIS
+
+NAMESPACE = RAA_CONFORMANCE_ONLY
+AUTHORITY = NONE
