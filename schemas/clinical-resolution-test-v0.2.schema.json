@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:replayos:clinical-resolution-test:v0.2",
+  "title": "CLINICAL_RESOLUTION_TEST_v0.2",
+  "description": "Deterministic cross-institution clinical condition-transition envelope with a 12x12 evidence rubric and a non-authoritative optimization boundary.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol",
+    "version",
+    "condition_id",
+    "state_before",
+    "state_after",
+    "evidence",
+    "rubric_matrix",
+    "delta_R",
+    "clinical_resolution",
+    "last_proven_condition_state",
+    "optimization_boundary",
+    "invariants",
+    "resilience_invariant"
+  ],
+  "properties": {
+    "protocol": {"const": "CLINICAL_RESOLUTION_TEST"},
+    "version": {"const": "0.2"},
+    "condition_id": {"type": "string", "minLength": 1},
+    "state_before": {"$ref": "#/$defs/clinical_state"},
+    "state_after": {"$ref": "#/$defs/clinical_state"},
+    "evidence": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/evidence_item"}
+    },
+    "rubric_matrix": {
+      "type": "array",
+      "minItems": 144,
+      "maxItems": 144,
+      "items": {"$ref": "#/$defs/rubric_cell"}
+    },
+    "delta_R": {
+      "enum": ["POSITIVE", "ZERO", "NEGATIVE", "UNPROVEN", "CONFLICTING"]
+    },
+    "clinical_resolution": {
+      "enum": ["RESOLVED", "UNRESOLVED", "UNPROVEN", "CONFLICTING"]
+    },
+    "last_proven_condition_state": {"type": "string", "minLength": 1},
+    "optimization_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "solver_class",
+        "logical_cell_count",
+        "cell_state_count",
+        "binary_variable_count",
+        "encoding",
+        "objective_mode",
+        "solver_output",
+        "clinical_authority"
+      ],
+      "properties": {
+        "solver_class": {"const": "CQM_COMPATIBLE"},
+        "logical_cell_count": {"const": 144},
+        "cell_state_count": {"const": 4},
+        "binary_variable_count": {"const": 576},
+        "encoding": {"const": "ONE_HOT_PER_CELL"},
+        "objective_mode": {"const": "PENALTY_DRIVEN_CONSISTENCY_ONLY"},
+        "solver_output": {"const": "CANDIDATE_X_STAR_ONLY"},
+        "clinical_authority": {"const": "NONE"}
+      }
+    },
+    "invariants": {
+      "type": "array",
+      "prefixItems": [
+        {"const": "NO RECEIPT -> UNPROVEN"},
+        {"const": "CONFLICTING RECEIPTS -> CONFLICTING"},
+        {"const": "AI MAY IDENTIFY GAPS ONLY"},
+        {"const": "AUTHORITY MUST BE JURISDICTION + VERSION BOUNDED"},
+        {"const": "SAME INPUTS + SAME VERSION -> SAME AUDIT RESULT"},
+        {"const": "ADMINISTRATIVE COMPLETION != CLINICAL RESOLUTION"},
+        {"const": "REDUNDANT COPIES != INDEPENDENT CORROBORATION"},
+        {"const": "SOURCE FAILURE MUST NOT CREATE A FALSE STATE"},
+        {"const": "LAST VERIFIED CLINICAL STATE MUST SURVIVE INSTITUTIONAL FAILURE"},
+        {"const": "EVIDENCE PROVENANCE MUST SURVIVE TRANSFER"},
+        {"const": "DISAGREEMENT BETWEEN INDEPENDENT SOURCES -> CONFLICTING"},
+        {"const": "MISSING CRITICAL EVIDENCE -> UNPROVEN, NEVER ASSUMED"}
+      ],
+      "minItems": 12,
+      "maxItems": 12
+    },
+    "resilience_invariant": {"const": "Failure(Sourceᵢ) ⇏ Failure(Audit)"}
+  },
+  "$defs": {
+    "clinical_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observed_at", "markers"],
+      "properties": {
+        "observed_at": {"type": "string", "format": "date-time"},
+        "markers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "value"],
+            "properties": {
+              "name": {"type": "string", "minLength": 1},
+              "value": {},
+              "unit": {"type": "string"},
+              "evidence_ref": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "evidence_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "source",
+        "timestamp",
+        "issuer",
+        "method",
+        "hash",
+        "independence_group",
+        "confidence"
+      ],
+      "properties": {
+        "evidence_id": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "institution": {"type": "string"},
+        "timestamp": {"type": "string", "format": "date-time"},
+        "issuer": {"type": "string", "minLength": 1},
+        "method": {"type": "string", "minLength": 1},
+        "hash": {"type": "string", "pattern": "^[A-Fa-f0-9]{64}$"},
+        "independence_group": {"type": "string", "minLength": 1},
+        "confidence": {
+          "oneOf": [
+            {"type": "number", "minimum": 0, "maximum": 1},
+            {"enum": ["UNKNOWN", "LOW", "MEDIUM", "HIGH", "DIRECT_OBSERVATION"]}
+          ]
+        }
+      }
+    },
+    "rubric_cell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["row", "column", "state", "evidence_refs"],
+      "properties": {
+        "row": {"enum": ["I1", "I2", "I3", "I4", "I5", "I6", "I7", "I8", "I9", "I10", "I11", "I12"]},
+        "column": {"enum": ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12"]},
+        "state": {"enum": ["PASS", "FAIL", "UNPROVEN", "CONFLICTING"]},
+        "evidence_refs": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    }
+  },
+  "x-semantic-rules": [
+    "The 144 rubric cells are the Cartesian product of I1-I12 and C1-C12; duplicate row-column pairs are invalid at the semantic layer.",
+    "Each rubric cell has exactly one state; a one-hot CQM encoding therefore uses 144 * 4 = 576 binary variables before auxiliaries.",
+    "Administrative completion cannot independently establish clinical_resolution=RESOLVED.",
+    "delta_R=POSITIVE does not imply clinical_resolution=RESOLVED.",
+    "Missing critical evidence forces UNPROVEN.",
+    "Material disagreement between independent admissible sources forces CONFLICTING until reconciled.",
+    "Optimization may search for a constraint-consistent candidate X* but cannot determine clinical outcome authority.",
+    "Resolution mapping is classical, deterministic, version-bounded, and replayable."
+  ]
+}
