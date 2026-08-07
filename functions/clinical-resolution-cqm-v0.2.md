@@ -53,18 +53,32 @@ The optimizer must treat the following as feasibility constraints, not soft outc
 
 ## Objective
 
-Among feasible assignments, minimize consistency penalties only:
+Among feasible assignments, minimize **structural consistency cost only**:
 
 ```text
 Q(X) =
-  w_fail      * P_fail(X)
-+ w_unproven  * P_unproven(X)
-+ w_conflict  * P_conflict(X)
-+ w_duplicate * P_duplicate(X)
-+ w_gap       * P_provenance_gap(X)
+  w_unsupported * P_unsupported_assignment(X)
++ w_duplicate   * P_duplicate_path(X)
++ w_break       * P_provenance_break(X)
++ w_complexity  * P_excess_assignment(X)
 ```
 
 The exact penalty definitions and weights are versioned inputs.
+
+### State-neutral objective rule
+
+The objective MUST NOT prefer one semantic state over another. The following terms are forbidden:
+
+```text
+reward(PASS)
+penalty(FAIL)
+penalty(UNPROVEN)
+penalty(CONFLICTING)
+reward(RESOLVED)
+penalty(UNRESOLVED)
+```
+
+A state is allowed or forced only by evidence-derived hard constraints and deterministic post-processing, never because the optimizer finds that state cheaper.
 
 ### Weight safety rule
 
@@ -72,9 +86,7 @@ The exact penalty definitions and weights are versioned inputs.
 No finite objective weight may override a hard constraint.
 ```
 
-There is deliberately **no clinical-outcome reward term** such as `reward(RESOLVED)` or `penalty(UNRESOLVED)`.
-
-The optimizer therefore has no incentive or authority to manufacture a healthier state.
+The optimizer therefore has no incentive or authority to manufacture a healthier, cleaner, or more administratively convenient state.
 
 ## Candidate solution
 
@@ -84,7 +96,7 @@ The optimization layer returns only:
 X*
 ```
 
-where `X*` is a feasible candidate assignment minimizing the declared consistency objective to the extent reported by the solver.
+where `X*` is a feasible candidate assignment minimizing the declared structural-consistency objective to the extent reported by the solver.
 
 A solver's best sample is not itself a clinical conclusion and need not constitute a mathematical proof of global optimality unless the solver and verification receipt explicitly establish that property.
 
@@ -132,6 +144,16 @@ VERIFIED_OPTIMUM
 A D-Wave hybrid/QPU run may produce a strong feasible candidate without proving the universal inequality over all feasible `X`. The status `VERIFIED_OPTIMUM` therefore requires an independent verification method capable of proving optimality for the instantiated problem.
 
 This distinction is mandatory and prevents a solver success response from being inflated into a mathematical proof.
+
+## D-Wave implementation note
+
+Use ordinary CQM equality constraints for the one-hot equations when the same binary variables also participate in other constraints or objective terms:
+
+```text
+x[i,j,PASS] + x[i,j,FAIL] + x[i,j,UNPROVEN] + x[i,j,CONFLICTING] == 1
+```
+
+Do not rely on a specialized discrete-variable helper when its disjoint-variable restrictions conflict with additional model use.
 
 ## Multi-stakeholder tensor
 
