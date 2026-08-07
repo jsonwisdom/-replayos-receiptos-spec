@@ -79,9 +79,18 @@
   ],
   "objective": {
     "mode": "PENALTY_DRIVEN_CONSISTENCY_ONLY",
-    "form": "Q(X) = w_fail*FAIL + w_unproven*UNPROVEN + w_conflict*CONFLICTING + w_dup*DUPLICATION + w_gap*PROVENANCE_GAPS",
-    "weight_policy": "Weights may rank otherwise-feasible candidate assignments but may not relax, replace, or overpower hard constraints.",
-    "clinical_outcome_term_allowed": false
+    "form": "Q(X) = w_unsupported*UNSUPPORTED_ASSIGNMENT + w_dup*DUPLICATE_PATH + w_break*PROVENANCE_BREAK + w_complexity*EXCESS_ASSIGNMENT",
+    "weight_policy": "Weights may rank otherwise-feasible consistency assignments but may not relax, replace, or overpower hard constraints.",
+    "semantic_state_preference_allowed": false,
+    "clinical_outcome_term_allowed": false,
+    "forbidden_objective_terms": [
+      "reward(PASS)",
+      "penalty(FAIL)",
+      "penalty(UNPROVEN)",
+      "penalty(CONFLICTING)",
+      "reward(RESOLVED)",
+      "penalty(UNRESOLVED)"
+    ]
   },
   "outputs": {
     "optimizer": "X_star only",
