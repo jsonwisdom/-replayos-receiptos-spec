@@ -1,0 +1,100 @@
+{
+  "artifact": "CLINICAL_RESOLUTION_12X12_RUBRIC_v0.2",
+  "role": "ClinicalResolutionOracleRubric",
+  "registryCompatibility": "compatible",
+  "oracle": "What is the last condition state we can actually prove?",
+  "matrix": {
+    "row_count": 12,
+    "column_count": 12,
+    "cell_count": 144,
+    "cell_states": ["PASS", "FAIL", "UNPROVEN", "CONFLICTING"],
+    "encoding": {
+      "type": "ONE_HOT",
+      "binary_variables_per_cell": 4,
+      "base_binary_variable_count": 576,
+      "constraint": "for every (i,j): sum_s x[i,j,s] = 1"
+    }
+  },
+  "rows": [
+    {"id": "I1", "invariant": "NO RECEIPT -> UNPROVEN"},
+    {"id": "I2", "invariant": "CONFLICTING RECEIPTS -> CONFLICTING"},
+    {"id": "I3", "invariant": "AI MAY IDENTIFY GAPS ONLY"},
+    {"id": "I4", "invariant": "AUTHORITY MUST BE JURISDICTION + VERSION BOUNDED"},
+    {"id": "I5", "invariant": "SAME INPUTS + SAME VERSION -> SAME AUDIT RESULT"},
+    {"id": "I6", "invariant": "ADMINISTRATIVE COMPLETION != CLINICAL RESOLUTION"},
+    {"id": "I7", "invariant": "REDUNDANT COPIES != INDEPENDENT CORROBORATION"},
+    {"id": "I8", "invariant": "SOURCE FAILURE MUST NOT CREATE A FALSE STATE"},
+    {"id": "I9", "invariant": "LAST VERIFIED CLINICAL STATE MUST SURVIVE INSTITUTIONAL FAILURE"},
+    {"id": "I10", "invariant": "EVIDENCE PROVENANCE MUST SURVIVE TRANSFER"},
+    {"id": "I11", "invariant": "DISAGREEMENT BETWEEN INDEPENDENT SOURCES -> CONFLICTING"},
+    {"id": "I12", "invariant": "MISSING CRITICAL EVIDENCE -> UNPROVEN, NEVER ASSUMED"}
+  ],
+  "columns": [
+    {"id": "C1", "dimension": "Receipt Presence"},
+    {"id": "C2", "dimension": "Provenance Integrity"},
+    {"id": "C3", "dimension": "Source Independence"},
+    {"id": "C4", "dimension": "Corroboration"},
+    {"id": "C5", "dimension": "Temporal Ordering"},
+    {"id": "C6", "dimension": "R_before Integrity"},
+    {"id": "C7", "dimension": "R_after Integrity"},
+    {"id": "C8", "dimension": "Condition-Transition Evidence"},
+    {"id": "C9", "dimension": "Administrative Separation"},
+    {"id": "C10", "dimension": "Conflict Handling"},
+    {"id": "C11", "dimension": "Source-Failure Resilience"},
+    {"id": "C12", "dimension": "Deterministic Replay"}
+  ],
+  "hard_constraints": [
+    {
+      "id": "H1_NO_RECEIPT",
+      "rule": "If critical condition-transition receipt evidence is absent, affected cells and downstream transition state cannot be upgraded beyond UNPROVEN."
+    },
+    {
+      "id": "H2_CONFLICT",
+      "rule": "Material disagreement between independent admissible evidence paths forces CONFLICTING until reconciled."
+    },
+    {
+      "id": "H3_ADMIN_SEPARATION",
+      "rule": "Administrative completion artifacts cannot independently establish RESOLVED."
+    },
+    {
+      "id": "H4_COPY_INDEPENDENCE",
+      "rule": "Evidence items in the same independence_group count as one corroboration path regardless of copy count."
+    },
+    {
+      "id": "H5_SOURCE_FAILURE",
+      "rule": "Source unavailability cannot create a new clinical state or erase the last verified clinical state."
+    },
+    {
+      "id": "H6_DETERMINISM",
+      "rule": "Identical admissible inputs under the same oracle version must produce the same classical resolution output."
+    },
+    {
+      "id": "H7_ONE_HOT",
+      "rule": "Every rubric cell has exactly one state."
+    },
+    {
+      "id": "H8_NO_OPTIMIZER_AUTHORITY",
+      "rule": "Optimizer output is a candidate consistency assignment only and cannot directly set delta_R or clinical_resolution."
+    }
+  ],
+  "objective": {
+    "mode": "PENALTY_DRIVEN_CONSISTENCY_ONLY",
+    "form": "Q(X) = w_unsupported*UNSUPPORTED_ASSIGNMENT + w_dup*DUPLICATE_PATH + w_break*PROVENANCE_BREAK + w_complexity*EXCESS_ASSIGNMENT",
+    "weight_policy": "Weights may rank otherwise-feasible consistency assignments but may not relax, replace, or overpower hard constraints.",
+    "semantic_state_preference_allowed": false,
+    "clinical_outcome_term_allowed": false,
+    "forbidden_objective_terms": [
+      "reward(PASS)",
+      "penalty(FAIL)",
+      "penalty(UNPROVEN)",
+      "penalty(CONFLICTING)",
+      "reward(RESOLVED)",
+      "penalty(UNRESOLVED)"
+    ]
+  },
+  "outputs": {
+    "optimizer": "X_star only",
+    "classical_oracle": ["delta_R", "clinical_resolution", "last_proven_condition_state"]
+  },
+  "resilience_invariant": "Failure(Sourceᵢ) ⇏ Failure(Audit)"
+}
